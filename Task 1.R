@@ -3,7 +3,7 @@ myMeanVarPort <- function(tickers, start_date, end_date, risk_free_rate) {
   library(quantmod)
   library(dplyr)
   
-  # Data acquisition: get stock data from Yahoo
+  # Data acquisition: get stock data from Yahoo (no API key required)
   getSymbols(tickers, src = 'yahoo', from = start_date, to = end_date, periodicity = 'monthly')
   
   # Calculate monthly returns for each ticker
@@ -21,21 +21,29 @@ myMeanVarPort <- function(tickers, start_date, end_date, risk_free_rate) {
   mean_returns <- colMeans(combined_returns, na.rm = TRUE)
   cov_matrix <- cov(combined_returns, use = "complete.obs")
   
+  # Simulate portfolios
+  set.seed(12)  # For reproducibility
+  num_portfolios <- 100 * num_assets
+  num_assets <- length(tickers)
+  simulated_portfolios <- replicate(num_portfolios, {
+    weights <- runif(num_assets)
+    weights <- weights / sum(weights)  # Normalize weights to sum to 1
+    portfolio_return <- sum(weights * mean_returns)
+    portfolio_risk <- sqrt(t(weights) %*% cov_matrix %*% weights)
+    sharpe_ratio <- (portfolio_return - risk_free_rate) / portfolio_risk
+    c(weights, portfolio_return, portfolio_risk, sharpe_ratio)
+  })
+  
+  # Convert simulated portfolios to a data frame
+  portfolio_data <- as.data.frame(t(simulated_portfolios))
+  colnames(portfolio_data) <- c(paste0("Weight_", tickers), "Mean_Return", "Risk", "Sharpe_Ratio")
+  
   # Return the results as a list
   result <- list(
     mean_returns = mean_returns,
-    cov_matrix = cov_matrix
+    cov_matrix = cov_matrix,
+    portfolio_data = portfolio_data
   )
   
   return(result)
 }
-
-# Example usage: First, run the R script, then use the below code in the console. Remove the # before each line before run. 
-# tickers <- c('AAPL', 'MSFT', 'GOOG')
-# start_date <- '2020-01-01'
-# end_date <- '2023-01-01'
-# risk_free_rate <- 0.02
-#result <- myMeanVarPort(tickers, start_date, end_date, risk_free_rate)
-
-# Print the result
-# print(result)
