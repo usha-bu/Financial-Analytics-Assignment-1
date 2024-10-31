@@ -3,7 +3,7 @@ myMeanVarPort <- function(tickers, start_date, end_date, risk_free_rate) {
   library(quantmod)
   library(dplyr)
   
-  # Data acquisition: get stock data from Yahoo (no API key required)
+  # Data acquisition: get stock data from Yahoo
   getSymbols(tickers, src = 'yahoo', from = start_date, to = end_date, periodicity = 'monthly')
   
   # Calculate monthly returns for each ticker
@@ -22,7 +22,7 @@ myMeanVarPort <- function(tickers, start_date, end_date, risk_free_rate) {
   cov_matrix <- cov(combined_returns, use = "complete.obs")
   
   # Simulate portfolios
-  set.seed(12)  # For reproducibility
+  set.seed(12)
   num_portfolios <- 100 * num_assets
   num_assets <- length(tickers)
   simulated_portfolios <- replicate(num_portfolios, {
